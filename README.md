@@ -1,2 +1,5 @@
 # b-olivia-encrypter
-Hardware Key Encrypter
+
+B-Olivia is a new encryption system based on arithmetic operations that the CPU decides randomly and scalable way, obtaining this way a strong and complex encryption almost impossible to hack, we say almost impossible unless the CPU itself reaches have their own decision as to fraud man.
+
+B-Olivia has the ability to decide which seed work in the system and after choosing the seed, it is come to this same synchronization using simple arithmetic and not logical positioning operations numbers. When data transmission is practically a garbage when you see if an interception of these to run a physically debug and try to decode what you send is made. Trying to make an interception would be completely absurd to do so since there is no logic to the data interfaces because it is a decision of the cpu when processing data, this means that however much they do it for strength gross sending random codes would serve no purpose at all, because processing is totally random and only identifies how the data and not the data sent itself was calculated.
