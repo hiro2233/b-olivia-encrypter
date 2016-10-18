@@ -1,0 +1,295 @@
+' include the HID descriptor
+include	"DESCUSBProject.bas"
+
+'CMCON = 7
+
+DEFINE OSC 48
+DEFINE RESET_ORG 1000h
+
+trisb = %00000000
+portb = %00000000
+
+trisa = %00000000
+porta = %00000000
+
+USBBufferSizeMax   con 8  ' maximum buffer size
+USBBufferSizeTX    con 8  ' input
+USBBufferSizeRX    con 8  ' output
+
+' the USB buffer...
+USBBufferaux        Var Byte[USBBufferSizeMax + 1]
+USBBuffer        Var Byte[USBBufferSizeMax] 
+USBBufferCount   Var Byte 
+
+' Set Debug pin port
+DEFINE DEBUG_REG PORTA 
+
+' Set Debug pin bit
+DEFINE DEBUG_BIT 0 
+
+' Set Debug baud rate
+DEFINE DEBUG_BAUD 9600
+
+' Set Debug mode: 0 = true, 1 = inverted
+DEFINE DEBUG_MODE 1
+
+'DEFINE DEBUG_PACING 1000
+
+
+
+'sw var bit
+i var byte
+pin1 var bit
+temp var byte
+aux var byte
+var1 var byte
+sw1 var byte
+pos var byte
+
+pause 500
+DEbug "B-Olivia ID: 01",13
+debug "ON "
+pause 500
+debug "ON",13
+
+i = 0
+sw1 = 0
+pos = 1
+
+'sw = 0
+pause 400
+high portb.3
+pause 200
+low portb.3
+pause 200
+high portb.3
+pause 200
+low portb.3
+pause 400
+high portb.3
+pause 500
+low portb.3
+pause 700
+high portb.3
+high portb.2
+pause 700
+
+' ************************************************************
+' * main program loop - remember, you must keep the USB      *
+' * connection alive with a call to USBService every couple  *
+' * of milliseconds or so...                                 *
+' ************************************************************
+usbinit ' initialise USB...
+
+low portb.3
+low portb.2
+pause 500
+high portb.3
+high portb.2
+pause 500
+
+
+
+gosub DoUSBIn
+'pos = usbbuffer[0]
+
+'while pos > 4
+   'pos = pos - 4
+'wend
+'goto aqui1
+
+ProgramStart:
+   portb.1 = 1 
+   pause 10
+   gosub DoUSBIn 
+   portb.1 = 0
+   pause 10
+   portb.1 = 1
+   pause 10
+   portb.1 = 0
+   pause 10
+   portb.1 = 1
+   pause 10
+   portb.1 = 0
+   pause 10
+   'sw1 = usbbuffer[pos]
+   for i = 0 to  7
+     usbbufferaux[i+1] =  usbbuffer[i]
+   next
+   pos = usbbufferaux[pos]
+   while (pos > 8)
+     pos = pos - 8
+   wend  
+
+
+
+   if ((usbbuffer[0] = 3)and (usbbuffer[1] = 255) and (usbbuffer[1] = 255)) then
+     portb.3 = 1
+     pause 1000
+   endif
+   if ((usbbuffer[0] = 3)and (usbbuffer[1] = 254)and (usbbuffer[1] = 254)) then
+     portb.3 = 0
+     pause 1000
+   endif 
+   'if ((usbbuffer[0] = 2)and (usbbuffer[1] = "E")) then
+     'high portb.2
+   'endif
+   'if i((usbbuffer[0] = 2)and (usbbuffer[1] = "A")) then
+     'low portb.2
+   'endif 
+
+   'debug "POSICION ",hex pos, 13
+'aqui1:
+   
+   temp = usbbuffer[0]
+   'debug "Pos-",hex pos,13
+   debug "Dato USB HOST recibido... ",13   
+   for i = 0 to 7
+     'temp = temp << 1
+     'pin1 = temp.bit6
+     'portb.2 = pin1
+     aux = i
+'serial 1 8 3 2 3 3 4 2  ----  + + // * + - * +
+'serial 8 2 3 4 7 4 4 2
+'serial 3 8 8 2 5 1 3 2
+'serial 1 6 3 2 1 6 5 4
+     if pos = 1 then      
+       gosub buscar1
+     endif
+     if pos = 2 then      
+       gosub buscar2
+     endif
+     if pos = 3 then      
+       gosub buscar3
+     endif
+     if pos = 4 then      
+       gosub buscar4
+     endif     
+     if pos = 5 then      
+       gosub buscar5
+     endif
+     if pos = 6 then      
+       gosub buscar6
+     endif
+     if pos = 7 then      
+       gosub buscar7
+     endif
+     if pos = 8 then      
+       gosub buscar8
+     endif
+
+
+     debug hex usbbuffer[i], "-" 
+        
+     if ((i = 0)  and (usbbuffer[i] <= 240)) then
+       usbbuffer[i] = usbbuffer[i] + var1
+     endif
+     if ((i = 1)  and (usbbuffer[i] <= 240)) then
+       usbbuffer[i] = usbbuffer[i] + var1
+     endif
+     if ((i = 2) and (usbbuffer[i] >= 28)) then    '28
+       usbbuffer[i] = usbbuffer[i] // var1
+     endif
+     if ((i = 3) and (usbbuffer[i] <= 17)) then    '28
+       usbbuffer[i] = usbbuffer[i] * var1
+     endif
+     if ((i = 4)  and (usbbuffer[i] <= 240)) then
+       usbbuffer[i] = usbbuffer[i] + var1
+     endif
+     if ((i = 5) and (usbbuffer[i] >= 17)) then
+       usbbuffer[i] = usbbuffer[i] - var1
+     endif
+     if ((i = 6) and (usbbuffer[i] <= 17)) then
+       usbbuffer[i] = usbbuffer[i] * var1
+     endif
+     if ((i = 7)  and (usbbuffer[i] <= 240)) then
+       usbbuffer[i] = usbbuffer[i] + var1
+     endif
+     pause 10
+   next
+
+   debug 13, "Dato USB LOCAL enviado... ",13
+
+   for i = 0 to 7
+     debug hex usbbuffer[i], "-"
+     pause 10
+   next
+   debug 13,13
+   'pos = pos + 1
+   'if pos >= 4 then
+      'pos = 1
+   'endif
+ 
+
+   'pause 1
+   
+   'usbbuffer[0] = "H"
+   'portb.3  =  sw
+
+   portb.0 = 1
+   pause 10
+   gosub DoUSBOut
+   portb.0 = 0
+   pause 10
+   goto ProgramStart  
+
+' ************************************************************
+' * receive data from the USB bus                            *
+' ************************************************************
+DoUSBIn:
+   USBBufferCount = USBBufferSizeRX              ' RX buffer size
+   USBService                                    ' keep connection alive
+   portb.4 = 1
+   pause 10
+   portb.4 = 0
+   pause 10
+   USBIn 1, USBBuffer, USBBufferCount, DoUSBIn   ' read data, if available
+   portb.5 = 1
+   pause 10
+   portb.5 = 0
+   pause 10
+   return
+    
+' ************************************************************
+' * wait for USB interface to attach                         *
+' ************************************************************
+DoUSBOut:
+   USBBufferCount = USBBufferSizeTX              ' TX buffer size
+   USBService                                    ' keep connection alive
+   portb.6 = 1
+   pause 10
+   portb.6 = 0
+   pause 10
+   USBOut 1, USBBuffer, USBBufferCount, DoUSBOut ' if bus available, transmit data
+   portb.7 = 1
+   pause 10
+   portb.7 = 0
+   pause 10
+   return
+
+buscar1:
+  lookup aux,[1,8,3,2,3,3,4,2],var1
+return 
+buscar2:
+  lookup aux,[8,2,5,4,7,4,3,6],var1
+return 
+buscar3:
+  lookup aux,[3,7,8,7,5,1,2,9],var1
+return 
+buscar4:
+  lookup aux,[2,6,7,3,1,6,5,1],var1
+return 
+buscar5:
+  lookup aux,[9,8,1,2,3,5,4,2],var1
+return 
+buscar6:
+  lookup aux,[8,1,1,4,5,4,3,6],var1
+return 
+buscar7:
+  lookup aux,[3,2,8,2,5,1,2,9],var1
+return 
+buscar8:
+  lookup aux,[1,2,7,3,5,6,5,1],var1
+return 
+
+
